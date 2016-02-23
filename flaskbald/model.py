@@ -27,6 +27,7 @@ from flaskbald.text import camel_to_underscore, pluralize
 surrogate_pk_template = sa.Column(sa.Integer, nullable=False,
 										  	  primary_key=True)
 
+
 def create_dump_engine(app):
     '''Create a sql engine that just prints SQL using the current dialect to
     STDOUT instead of executing it.
@@ -45,7 +46,8 @@ def create_dump_engine(app):
     return dump_engine
 
 
-def create_model(app, db):
+def create_model(db):
+	app = None
 
 	class Model(db.Model):
 

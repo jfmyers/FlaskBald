@@ -94,27 +94,57 @@ def json_response(body, status):
 
 
 def api_action(orig_func):
-    """
-    Decorator that wraps an action in API goodness.
+	"""
+	Decorator that wraps an action in API goodness.
 
-    The orig_func is expected to return any JSON-serializable python data
-    structure, or raise any ApiException (which will be wrapped in a
-    standard JSON structure).
+	The orig_func is expected to return any JSON-serializable python data
+	structure, or raise any ApiException (which will be wrapped in a
+	standard JSON structure).
 
-    """
-    @wraps(orig_func)
-    def replacement(*args, **kargs):
-        try:
-            handler_response = orig_func(*args, **kargs)
-        except APIError as api_error_response:
-            return api_error_response
+	"""
+	@wraps(orig_func)
+	def replacement(*args, **kargs):
+		# from flask import request
+		# data = request.get_data()
+		# if data is None:
+		# 	data = {}
+		# else:
+		# 	try:
+		# 		data = json.loads(data)
+		# 	except ValueError:
+		# 		data = {}
 
-        # return the response or reformat for proper response
-        if isinstance(handler_response, Response):
-            return handler_response
-        else:
-            return json_response(handler_response, status='200 OK')
-    return replacement
+		# kargs['data'] = data
+
+		try:
+			handler_response = orig_func(*args, **kargs)
+		except APIError as api_error_response:
+			return api_error_response
+
+		# return the response or reformat for proper response
+		if isinstance(handler_response, Response):
+			return handler_response
+		else:
+			return json_response(handler_response, status='200 OK')
+
+	return replacement
+
+
+def request_data():
+	'''
+	Retrieve the data from this Flask app's context, 
+	decode and return as Python dict.
+	'''
+	from flask import request
+	data = request.get_data()
+	if data is None:
+		data = {}
+	else:
+		try:
+			data = json.loads(data)
+		except ValueError:
+			data = {}
+	return data
 
 
 class APIException(Exception):
