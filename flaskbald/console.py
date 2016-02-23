@@ -27,6 +27,7 @@ class Console(code.InteractiveConsole):
         if not package_name:
             package_name = self.project_name
 
+        self.app = app
         # add the application to the console namespace
         console_symbols = {'app': app, 'db': db}
         console_symbols.update(models)
@@ -59,8 +60,9 @@ class Console(code.InteractiveConsole):
     def run(self):
         '''Start the console with the project, controllers,
         and models defined in the console's namespace.'''
-        self.interact('''Welcome to the Flask-Bald interactive console\n'''
-                      ''' ** project: {0} **'''.format(self.project_name))
+        with self.app.app_context():
+            self.interact('''Welcome to the Flask-Bald interactive console\n'''
+                          ''' ** project: {0} **'''.format(self.project_name))
 
 
 def start_console(app, options=None):
