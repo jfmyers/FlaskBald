@@ -5,78 +5,6 @@ from functools import wraps
 import json
 
 
-# # action / method decorator
-# def action(method):
-#     '''
-#     Decorates methods that are WSGI apps to turn them into pybald-style actions.
-
-#     :param method: A method to turn into a pybald-style action.
-
-#     This decorator is usually used to take the method of a controller instance
-#     and add some syntactic sugar around it to allow the method to use WebOb
-#     Request and Response objects. It will work with any method that
-#     implements the WSGI spec.
-
-#     It allows actions to work with WebOb request / response objects and handles
-#     default behaviors, such as displaying the view when nothing is returned,
-#     or setting up a plain text Response if a string is returned. It also
-#     assigns instance variables from the ``pybald.extension`` environ variables
-#     that can be set from other parts of the WSGI pipeline.
-
-#     This decorator is optional but recommended for making working
-#     with requests and responses easier.
-#     '''
-#     # the default template name is the controller class + method name
-#     # the method name is pulled during decoration and stored for use
-#     # in template lookups
-#     template_name = method.__name__
-#     # special case where 'call' or 'index' use the base class name
-#     # for the template otherwise use the base name
-#     if template_name in ('index', '__call__'):
-#         template_name = ''
-
-#     @wraps(method)
-#     def action_wrapper(self, environ, start_response):
-#         req = Request(environ)
-#         # add any url variables as members of the controller
-#         for varname, value in req.urlvars.items():
-#             # Set the controller object to contain the url variables
-#             # parsed from the dispatcher / router
-#             setattr(self, varname, value)
-
-#         # # add the pybald extension dict to the controller
-#         # # object
-#         # for key, value in req.environ.setdefault('pybald.extension', {}).items():
-#         #     setattr(self, key, value)
-
-#         # TODO: fixme this is a hack
-#         setattr(self, 'request', req)
-#         setattr(self, 'request_url', req.url)
-
-#         # set pre/post/view to a no-op if they don't exist
-#         pre = getattr(self, '_pre', noop_func)
-#         post = getattr(self, '_post', noop_func)
-
-#         # # set the template_id for this request
-#         # self.template_id = get_template_name(self, template_name)
-
-#         # # The response is either the controllers _pre code, whatever
-#         # # is returned from the controller
-#         # # or the view. So pre has precedence over
-#         # # the return which has precedence over the view
-#         # resp = (pre(req) or
-#         #          method(self, req) or
-#         #          context.render(template=self.template_id,
-#         #                      data=self.__dict__ or {}))
-#         # # if the response is currently a string
-#         # # wrap it in a response object
-#         # if isinstance(resp, str) or isinstance(resp, bytes):
-#         #     resp = Response(body=resp, charset="utf-8")
-#         # # run the controllers post code
-#         # post(req, resp)
-#         return resp(environ, start_response)
-#     return action_wrapper
-
 def json_response(body, status):
     '''
     Return response JSON encoded with proper headers.
@@ -104,18 +32,6 @@ def api_action(orig_func):
 	"""
 	@wraps(orig_func)
 	def replacement(*args, **kargs):
-		# from flask import request
-		# data = request.get_data()
-		# if data is None:
-		# 	data = {}
-		# else:
-		# 	try:
-		# 		data = json.loads(data)
-		# 	except ValueError:
-		# 		data = {}
-
-		# kargs['data'] = data
-
 		try:
 			handler_response = orig_func(*args, **kargs)
 		except APIError as api_error_response:
