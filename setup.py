@@ -1,3 +1,10 @@
+try:
+	from setuptools import setup, find_packages
+except ImportError:
+	from ez_setup import use_setuptools
+	use_setuptools()
+	from setuptools import setup, find_packages
+
 import io
 import os
 
@@ -21,8 +28,9 @@ setup(name='flaskbald',
 	author='Jim Myers',
 	author_email='jfmyers01@gmail.com',
 	license='MIT',
-	packages=['flaskbald'],
+	packages=find_packages(),
+	package_data={'flaskbald': ['default_templates/*.html']},
 	install_requires=[
-		'sqlalchemy'
+		'SQLAlchemy', 'Flask', 'Flask-SQLAlchemy', 'jinja2'
 	],
 	zip_safe=False)

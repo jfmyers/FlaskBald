@@ -28,6 +28,15 @@ surrogate_pk_template = sa.Column(sa.Integer, nullable=False,
 										  	  primary_key=True)
 
 
+def get_models(module):
+	models_dict = {}
+	def assign_attr(item):
+		models_dict[item] = getattr(module, item)
+
+	map(assign_attr, dir(module))
+	return models_dict
+
+
 def create_dump_engine(app):
     '''Create a sql engine that just prints SQL using the current dialect to
     STDOUT instead of executing it.
@@ -47,7 +56,6 @@ def create_dump_engine(app):
 
 
 def create_model(db):
-	app = None
 
 	class Model(db.Model):
 
@@ -185,8 +193,8 @@ def create_model(db):
 			'''
 			return db.session.query(cls)
 
-		@classmethod
-		def show_create_table(cls):
-			cls.__table__.create(create_dump_engine(app))
+		# @classmethod
+		# def show_create_table(cls):
+		# 	cls.__table__.create(create_dump_engine(app))
 	
 	return Model

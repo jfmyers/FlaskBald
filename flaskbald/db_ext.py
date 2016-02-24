@@ -1,4 +1,10 @@
 from sqlalchemy.ext.mutable import Mutable
+from flask_sqlalchemy import SQLAlchemy
+from flaskbald.model import create_model
+
+
+db = SQLAlchemy()
+Model = create_model(db)
 
 
 class MutationDict(Mutable, dict):

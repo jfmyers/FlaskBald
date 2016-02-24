@@ -7,10 +7,10 @@
 # Copyright (c) 2015 Michael Kowalchik. All rights reserved.
 # """
 import code
-
 import readline
 import atexit
 import os
+from db_ext import db
 
 # import webob
 # from ..test import Client
@@ -19,7 +19,7 @@ import os
 class Console(code.InteractiveConsole):
     ''' console including history buffer per project.'''
     def __init__(self, project_name, package_name=None, app=None,
-                 db=None, models=None, additional_symbols=None):
+                 models=None, additional_symbols=None):
         if additional_symbols is None:
             additional_symbols = {}
 
@@ -28,6 +28,7 @@ class Console(code.InteractiveConsole):
             package_name = self.project_name
 
         self.app = app
+
         # add the application to the console namespace
         console_symbols = {'app': app, 'db': db}
         console_symbols.update(models)
