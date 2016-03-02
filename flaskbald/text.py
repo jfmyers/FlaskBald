@@ -78,3 +78,22 @@ def strip_accents(text):
     return ''.join((c for c in unicodedata.normalize('NFD', text) if
                                               unicodedata.category(c) != 'Mn'))
 
+
+def split_full_name(full_name):
+    if type(full_name) is not str and type(full_name) is not unicode:
+        return None, None
+
+    full_name = full_name.strip()
+
+    names = full_name.split(' ')
+
+    if len(names) > 2:
+        first_name = names[0]
+        last_name = ' '.join(names[1:])
+    elif len(names) == 2:
+        first_name, last_name = names
+    else:
+        first_name = full_name
+        last_name = None
+
+    return first_name.strip(), last_name.strip()
