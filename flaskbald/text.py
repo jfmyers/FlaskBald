@@ -97,3 +97,30 @@ def split_full_name(full_name):
         last_name = None
 
     return first_name.strip(), last_name.strip()
+
+
+email_re = re.compile(
+    r"(^[-!#$%&'*+/=?^_`{}|~0-9A-Z]+(\.[-!#$%&'*+/=?^_`{}|~0-9A-Z]+)*"  # dot-atom
+    r'|^"([\001-\010\013\014\016-\037!#-\[\]-\177]|\\[\001-011\013\014\016-\177])*"'  # quoted-string
+    r')@(?:[A-Z0-9](?:[A-Z0-9-]{0,61}[A-Z0-9])?\.)+[A-Z]{2,63}\.?$', re.IGNORECASE)
+
+
+def valid_email(email):
+    if not email or not email_re.match(email):
+        return False
+    return True
+
+
+def display_name(first_name, last_name):
+    if first_name and last_name:
+        return ' '.join([first_name, last_name])
+    elif first_name:
+        return first_name
+    elif last_name:
+        return last_name
+    else:
+        return None
+
+
+
+
