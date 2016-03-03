@@ -2,6 +2,7 @@
 # encoding: utf-8
 from flask import Flask, render_template, request
 from db_ext import db
+from celery_ext import celery
 from response import APINotFound, api_action
 from log import default_debug_log
 import os
@@ -127,7 +128,7 @@ def init_db(app):
 	return app
 
 
-def create_app(config_file, blue_prints=[], custom_error_endpoints=False, 
+def create_app(config_file, blue_prints=[], custom_error_endpoints=False,
 			   custom_template_path=None, custom_before_handler=None,
 			   custom_before_handler_args=[], custom_before_handler_kargs={},
 			   custom_after_handler=None, custom_after_handler_args=[],
@@ -147,6 +148,12 @@ def create_app(config_file, blue_prints=[], custom_error_endpoints=False,
 	app = init_db(app)
 
 	return app
+
+
+def create_celery_app(app):
+    celery.init_app(app)
+    return celery
+
 
 	# return (
 	# 	init_db(
