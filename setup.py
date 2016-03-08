@@ -31,6 +31,6 @@ setup(name='flaskbald',
 	packages=find_packages(),
 	package_data={'flaskbald': ['default_templates/*.html']},
 	install_requires=[
-		'SQLAlchemy', 'Flask', 'Flask-SQLAlchemy', 'jinja2'
+		'SQLAlchemy', 'Flask', 'Flask-SQLAlchemy', 'jinja2', 'phonenumbers'
 	],
 	zip_safe=False)

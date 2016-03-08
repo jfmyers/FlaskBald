@@ -1,5 +1,7 @@
 import re
 import unicodedata
+import phonenumbers
+
 
 try:
     type(unicode)
@@ -99,6 +101,33 @@ def split_full_name(full_name):
     return first_name.strip(), last_name.strip()
 
 
+def valid_phone_number(phone_number):
+    try:
+        parsed_phone_number = phonenumbers.parse(phone_number, None)
+    except phonenumbers.phonenumberutil.NumberParseException:
+        return False
+
+    return phonenumbers.is_valid_number(parsed_phone_number)
+
+
+def format_phone_number(phone_number):
+    DEFAULT_COUNTRY_REGION = '+1'
+    try:
+        parsed_phone_number = phonenumbers.parse(phone_number, None)
+    except phonenumbers.phonenumberutil.NumberParseException:
+        phone_number = ''.join([DEFAULT_COUNTRY_REGION, phone_number])
+
+    try:
+        parsed_phone_number = phonenumbers.parse(phone_number, None)
+    except phonenumbers.phonenumberutil.NumberParseException:
+        return None
+
+    if phonenumbers.is_valid_number(parsed_phone_number) is False:
+        return None
+
+    return phonenumbers.format_number(parsed_phone_number, phonenumbers.PhoneNumberFormat.E164)
+
+
 email_re = re.compile(
     r"(^[-!#$%&'*+/=?^_`{}|~0-9A-Z]+(\.[-!#$%&'*+/=?^_`{}|~0-9A-Z]+)*"  # dot-atom
     r'|^"([\001-\010\013\014\016-\037!#-\[\]-\177]|\\[\001-011\013\014\016-\177])*"'  # quoted-string
@@ -120,7 +149,4 @@ def display_name(first_name, last_name):
         return last_name
     else:
         return None
-
-
-
 
