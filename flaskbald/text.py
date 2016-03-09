@@ -91,14 +91,17 @@ def split_full_name(full_name):
 
     if len(names) > 2:
         first_name = names[0]
+        first_name = first_name.strip()
         last_name = ' '.join(names[1:])
+        last_name = last_name.strip()
     elif len(names) == 2:
         first_name, last_name = names
     else:
         first_name = full_name
+        first_name = first_name.strip()
         last_name = None
 
-    return first_name.strip(), last_name.strip()
+    return first_name, last_name
 
 
 def valid_phone_number(phone_number):
@@ -128,6 +131,92 @@ def format_phone_number(phone_number):
     return phonenumbers.format_number(parsed_phone_number, phonenumbers.PhoneNumberFormat.E164)
 
 
+
+def are_similar(str1, *args):
+    for str2 in args:
+        score = Similarity(str1, str2).get_sim()
+        if score > .70:
+            print 'return'
+            return True
+
+    return False
+
+
+def similarity_score(list_of_text, input_text):
+    scores = []
+    for test_text in list_of_text:
+        scores.append(Similarity(input_text, test_text).get_sim())
+    return max(scores)
+
+
+#Determine Character Pairs of a String and Return the Pairs in a List
+# ex: United = ['un','ni', 'it', 'te', 'ed']
+class CharPairs:
+    def __init__(self, string):
+        self.string = string.lower()
+        self.create_char_list()
+        self.create_char_pairs()
+
+    def create_char_list(self):
+        self.str_length = 0
+        self.strChars = {}
+        for char in self.string:
+            self.strChars[self.str_length] = char
+            self.str_length += 1
+
+    def create_char_pairs(self):
+        self.charPairs = []
+        self.charPairCount = 0
+        count = 0
+        for char in self.strChars:
+            if count < (self.str_length -1):
+                y = count + 1
+                pair = self.strChars[count] + self.strChars[y]
+                self.charPairs.append(pair)
+                self.charPairCount += 1
+
+            count += 1
+
+    def getCharPairs(self):
+        return self.charPairs
+
+    def getCharPairCount(self):
+        return self.charPairCount
+
+
+#Word Similarity Algorithm
+#Similarity(string1, string2) = 2 * number of incommon char. pairs / sum of total number of char. pairs in each string
+class Similarity:
+    def __init__(self,string1, string2):
+        #get character pairs for string1
+        strChar1 = CharPairs(string1)
+        self.charPair1 = strChar1.getCharPairs()
+        self.charPair1Count = strChar1.getCharPairCount()
+        self.string1 = string1.lower()
+        #get character pairs for string2
+        strChar2 = CharPairs(string2)
+        self.charPair2 = strChar2.getCharPairs()
+        self.charPair2Count = strChar2.getCharPairCount()
+        self.string2 = string2.lower()
+        #run steps
+        self.find_in_common_char_pairs()
+        self.calculate_similarity()
+
+    def find_in_common_char_pairs(self):
+        self.incommon = set(self.charPair1).intersection(self.charPair2)
+        self.incommon_count = 0
+        for i in self.incommon:
+            self.incommon_count += 1
+
+    def calculate_similarity(self):
+        numerator = 2 * self.incommon_count
+        denominator = self.charPair1Count + self.charPair2Count
+        # getcontext().prec = 4
+        self.sim = float(numerator) / float(denominator)
+
+    def get_sim(self):
+        return self.sim
+
 email_re = re.compile(
     r"(^[-!#$%&'*+/=?^_`{}|~0-9A-Z]+(\.[-!#$%&'*+/=?^_`{}|~0-9A-Z]+)*"  # dot-atom
     r'|^"([\001-\010\013\014\016-\037!#-\[\]-\177]|\\[\001-011\013\014\016-\177])*"'  # quoted-string
@@ -149,4 +238,3 @@ def display_name(first_name, last_name):
         return last_name
     else:
         return None
-
