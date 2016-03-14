@@ -5,6 +5,7 @@ from db_ext import db
 from celery_ext import celery
 from response import APINotFound, api_action
 from log import default_debug_log
+from flask.ext.cors import CORS, cross_origin
 import os
 import jinja2
 
@@ -132,7 +133,8 @@ def create_app(config_file, blue_prints=[], custom_error_endpoints=False,
 			   custom_template_path=None, custom_before_handler=None,
 			   custom_before_handler_args=[], custom_before_handler_kargs={},
 			   custom_after_handler=None, custom_after_handler_args=[],
-			   custom_after_handler_kargs={}, template_folder=None):
+			   custom_after_handler_kargs={}, template_folder=None,
+			   cors=True):
 
 	if config_file is None:
 		raise(Exception("Hey, 'config_files' cannot be 'None'!"))
@@ -146,6 +148,10 @@ def create_app(config_file, blue_prints=[], custom_error_endpoints=False,
 	app = before_handler(app, custom_before_handler, custom_before_handler_args, custom_before_handler_kargs)
 	app = after_handler(app, custom_after_handler, custom_after_handler_args, custom_after_handler_kargs)
 	app = init_db(app)
+
+	if cors is True:
+		cors = CORS(app)
+		app.config['CORS_HEADERS'] = 'Content-Type'
 
 	return app
 

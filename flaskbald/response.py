@@ -3,6 +3,7 @@
 from webob import Response
 from functools import wraps
 import json
+from flask.ext.cors import CORS, cross_origin
 
 
 def json_response(body, status):
@@ -31,6 +32,7 @@ def api_action(orig_func):
 
 	"""
 	@wraps(orig_func)
+	# @cross_origin()
 	def replacement(*args, **kargs):
 		try:
 			handler_response = orig_func(*args, **kargs)
@@ -48,7 +50,7 @@ def api_action(orig_func):
 
 def request_data():
 	'''
-	Retrieve the data from this Flask app's context, 
+	Retrieve the data from this Flask app's context,
 	decode and return as Python dict.
 	'''
 	from flask import request
