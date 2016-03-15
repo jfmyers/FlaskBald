@@ -150,6 +150,9 @@ def create_app(config_file, blue_prints=[], custom_error_endpoints=False,
 	app = init_db(app)
 
 	if cors is True:
+		print ""
+		print "Activating CORS!!!"
+		print ""
 		cors = CORS(app)
 		app.config['CORS_HEADERS'] = 'Content-Type'
 

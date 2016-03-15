@@ -15,7 +15,7 @@ def json_response(body, status):
                     content_type="application/json",
                     charset="UTF-8")
     resp.headers.update({
-        'Access-Control-Allow-Origin': '*',
+        # 'Access-Control-Allow-Origin': '*',
         'Access-Control-Expose-Headers': 'Access-Control-Allow-Origin',
         'Access-Control-Allow-Headers': 'Origin, X-Requested-With, Content-Type, Accept',
     })
@@ -32,7 +32,7 @@ def api_action(orig_func):
 
 	"""
 	@wraps(orig_func)
-	# @cross_origin()
+	@cross_origin()
 	def replacement(*args, **kargs):
 		try:
 			handler_response = orig_func(*args, **kargs)
