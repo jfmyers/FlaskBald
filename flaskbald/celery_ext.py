@@ -51,7 +51,6 @@ def flaskbald_task(**kargs):
                 task_result = task_function(*pargs, **kargs)
                 db.session.commit()
             except SQLAlchemyError:
-                console.exception("FlaskCelery SQLAlchemyError")
                 db.session.rollback()
                 raise SQLAlchemyError("Session Rolled Back")
             finally:
