@@ -131,6 +131,16 @@ def format_phone_number(phone_number):
     return phonenumbers.format_number(parsed_phone_number, phonenumbers.PhoneNumberFormat.E164)
 
 
+def pretty_phone_number(phone_number):
+    parsed_phone_number = phonenumbers.parse(phone_number, None)
+    formatted_number = phonenumbers.format_number(parsed_phone_number, phonenumbers.PhoneNumberFormat.NATIONAL)
+    split_number = formatted_number.split(" ")
+    number = ''
+    if len(split_number) == 3:
+        return "({0}) {1}-{2}".format(split_number[0], split_number[1], split_number[3])
+    else:
+        return formatted_number
+
 
 def are_similar(str1, *args):
     for str2 in args:
