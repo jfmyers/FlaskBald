@@ -8,6 +8,8 @@ from log import default_debug_log
 from flask.ext.cors import CORS, cross_origin
 import os
 import jinja2
+from flask_errormail import mail_on_500
+from flask.ext.mail import Mail
 
 
 ALLOWED_HOSTS = 'ALLOWED_HOSTS'
@@ -150,11 +152,12 @@ def create_app(config_file, blue_prints=[], custom_error_endpoints=False,
 	app = init_db(app)
 
 	if cors is True:
-		print ""
-		print "Activating CORS!!!"
-		print ""
 		cors = CORS(app)
 		app.config['CORS_HEADERS'] = 'Content-Type'
+
+	if app.config.get('DEBUG') is False:
+		mail = Mail(app)
+		mail_on_500(app, app.config.get('ADMINS'))
 
 	return app
 
