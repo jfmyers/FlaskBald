@@ -120,6 +120,9 @@ def after_handler(app, custom_handler, custom_handler_args, custom_handler_kargs
 		# Close the session
 		db.session.close()
 
+		# Remove the session
+		db.session.remove()
+
 		# Return the response object
 		return response
 

@@ -54,6 +54,7 @@ def flaskbald_task(**kargs):
                 db.session.rollback()
                 raise SQLAlchemyError("Session Rolled Back")
             finally:
+                db.session.close()
                 db.session.remove()
             return task_result
 
