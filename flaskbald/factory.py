@@ -10,6 +10,7 @@ import os
 import jinja2
 from flask_errormail import mail_on_500
 from flask.ext.mail import Mail
+from flask_sslify import SSLify
 
 
 ALLOWED_HOSTS = 'ALLOWED_HOSTS'
@@ -139,13 +140,19 @@ def create_app(config_file, blue_prints=[], custom_error_endpoints=False,
 			   custom_before_handler_args=[], custom_before_handler_kargs={},
 			   custom_after_handler=None, custom_after_handler_args=[],
 			   custom_after_handler_kargs={}, template_folder=None,
-			   cors=True):
+			   cors=True, ssl_only=True):
 
 	if config_file is None:
 		raise(Exception("Hey, 'config_files' cannot be 'None'!"))
 
 	app = Flask(__name__) if not template_folder else Flask(__name__, template_folder=template_folder)
 	app = load_config(app, config_file)
+
+	if ssl_only is True and app.config.get("DEBUG") is False:
+		print 'SSL this shit!'
+		print ''
+		sslify = SSLify(app)
+
 	app = setup_templates(app, custom_template_path)
 	app = setup_debug_log(app)
 	app = register_blue_prints(app, blue_prints)
