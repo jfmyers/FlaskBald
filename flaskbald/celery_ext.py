@@ -7,13 +7,13 @@ from db_ext import db
 
 class FlaskCelery(Celery):
 
-    def __init__(self, *args, **kwargs):
+    # def __init__(self, *args, **kwargs):
 
-        super(FlaskCelery, self).__init__(*args, **kwargs)
-        self.patch_task()
+    #     super(FlaskCelery, self).__init__(*args, **kwargs)
+    #     if 'app' in kwargs:
+    #         self.init_app(kwargs['app'])
 
-        if 'app' in kwargs:
-            self.init_app(kwargs['app'])
+    #     self.patch_task()
 
     def patch_task(self):
         TaskBase = self.Task
@@ -34,6 +34,7 @@ class FlaskCelery(Celery):
     def init_app(self, app):
         self.app = app
         self.config_from_object(app.config)
+        self.patch_task()
 
 
 def flaskbald_task(**kargs):
@@ -47,15 +48,15 @@ def flaskbald_task(**kargs):
         @wraps(task_function)
         def replacement(*pargs, **kargs):
             task_result = None
-            try:
-                task_result = task_function(*pargs, **kargs)
-                db.session.commit()
-            except SQLAlchemyError:
-                db.session.rollback()
-                raise SQLAlchemyError("Session Rolled Back")
-            finally:
-                db.session.close()
-                db.session.remove()
+            # try:
+            task_result = task_function(*pargs, **kargs)
+            db.session.commit()
+            # except SQLAlchemyError:
+                # db.session.rollback()
+                # raise SQLAlchemyError("Session Rolled Back")
+            # finally:
+            db.session.close()
+            db.session.remove()
             return task_result
 
         return replacement
