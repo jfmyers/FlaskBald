@@ -6,7 +6,7 @@ import json
 from flask.ext.cors import CORS, cross_origin
 
 
-def json_response(body, status):
+def json_response(body, status, jwt_cookie=None):
     '''
     Return response JSON encoded with proper headers.
     '''
@@ -14,6 +14,10 @@ def json_response(body, status):
                     status=status,
                     content_type="application/json",
                     charset="UTF-8")
+
+    if jwt_cookie:
+		resp.set_cookie(key="ms_jwt", value=jwt_cookie.get('token'),
+						secure=True, overwrite=True)
     resp.headers.update({
         # 'Access-Control-Allow-Origin': '*',
         'Access-Control-Expose-Headers': 'Access-Control-Allow-Origin',
@@ -22,7 +26,7 @@ def json_response(body, status):
     return resp
 
 
-def api_action(orig_func):
+def api_action(orig_func=None, set_jwt_cookie=False):
 	"""
 	Decorator that wraps an action in API goodness.
 
@@ -31,21 +35,32 @@ def api_action(orig_func):
 	standard JSON structure).
 
 	"""
-	@wraps(orig_func)
-	@cross_origin()
-	def replacement(*args, **kargs):
-		try:
-			handler_response = orig_func(*args, **kargs)
-		except APIError as api_error_response:
-			return api_error_response
+	def actual_decorator(orig_func):
+		@wraps(orig_func)
+		@cross_origin()
+		def replacement(*args, **kargs):
+			try:
+				handler_response = orig_func(*args, **kargs)
+			except APIError as api_error_response:
+				return api_error_response
 
-		# return the response or reformat for proper response
-		if isinstance(handler_response, Response):
-			return handler_response
-		else:
-			return json_response(handler_response, status='200 OK')
+			# return the response or reformat for proper response
+			if isinstance(handler_response, Response):
+				return handler_response
+			else:
+				jwt_cookie = None
+				if set_jwt_cookie and handler_response.get('token'):
+					jwt_cookie = {'token': handler_response.get('token')}
+				return json_response(handler_response, status='200 OK', jwt_cookie=jwt_cookie)
+		return replacement
 
-	return replacement
+
+	if not orig_func:
+		def waiting_for_func(orig_func):
+			return actual_decorator(orig_func)
+		return waiting_for_func
+	else:
+		return actual_decorator(orig_func)
 
 
 def request_data():
@@ -119,6 +134,10 @@ class APIBadRequest(APIError):
 
 class APIUnauthorized(APIError):
     http_status = 401
+
+
+class APIResourceConflict(APIError):
+    http_status = 409
 
 
 class APIUserUnsubscribed(APIUnauthorized):
