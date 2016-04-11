@@ -16,7 +16,7 @@ def json_response(body, status, jwt_cookie=None):
                     charset="UTF-8")
 
     if jwt_cookie:
-		resp.set_cookie(key="ms_jwt", value=jwt_cookie.get('token'),
+		resp.set_cookie(key="jwt", value=jwt_cookie.get('token'),
 						secure=True, overwrite=True)
     resp.headers.update({
         # 'Access-Control-Allow-Origin': '*',
