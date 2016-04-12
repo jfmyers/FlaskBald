@@ -3,27 +3,37 @@
 from webob import Response
 from functools import wraps
 import json
-from flask.ext.cors import CORS, cross_origin
+# from flask.ext.cors import CORS, cross_origin
+# from werkzeug.wrappers import Response
 
 
-def json_response(body, status, jwt_cookie=None):
-    '''
-    Return response JSON encoded with proper headers.
-    '''
-    resp = Response(json.dumps({"status": "success", "data": body}),
-                    status=status,
-                    content_type="application/json",
-                    charset="UTF-8")
+def json_response(body, status, status_code=200, jwt_cookie=None):
+	'''
+	Return response JSON encoded with proper headers.
+	'''
+	resp = Response(json.dumps({"status": "success", "data": body}),
+					status=status, content_type="application/json",
+					charset='utf-8')
 
-    if jwt_cookie:
+	# resp = Response(json.dumps({"status": "success", "data": body}))
+	# resp.status_code = status_code
+	# resp.status = status
+	# resp.headers['Content-Type'] = "application/json; charset=utf-8"
+	# resp.headers['Access-Control-Expose-Headers'] = 'Access-Control-Allow-Origin'
+	# resp.headers['Access-Control-Allow-Headers'] = 'Origin, X-Requested-With, Content-Type, Accept'
+
+	if jwt_cookie:
 		resp.set_cookie(key="jwt", value=jwt_cookie.get('token'),
-						secure=True, overwrite=True)
-    resp.headers.update({
-        # 'Access-Control-Allow-Origin': '*',
-        'Access-Control-Expose-Headers': 'Access-Control-Allow-Origin',
-        'Access-Control-Allow-Headers': 'Origin, X-Requested-With, Content-Type, Accept',
-    })
-    return resp
+						httponly=True)
+		# resp.set_cookie('jwt', jwt_cookie.get('token'), httponly=True)
+
+	resp.headers.update({
+		# 'Access-Control-Allow-Origin': '*',
+		'Access-Control-Expose-Headers': 'Access-Control-Allow-Origin',
+		'Access-Control-Allow-Headers': 'Origin, X-Requested-With, Content-Type, Accept',
+	})
+
+	return resp
 
 
 def api_action(orig_func=None, set_jwt_cookie=False):
@@ -37,7 +47,7 @@ def api_action(orig_func=None, set_jwt_cookie=False):
 	"""
 	def actual_decorator(orig_func):
 		@wraps(orig_func)
-		@cross_origin()
+		# @cross_origin()
 		def replacement(*args, **kargs):
 			try:
 				handler_response = orig_func(*args, **kargs)
@@ -97,8 +107,7 @@ class WSGIAPIException(Response, APIException):
         APIException.__init__(self, message)
         if self.http_status and 'status' not in kargs:
             kargs['status'] = self.http_status
-        kargs.update({'content_type': "application/json",
-                      'charset': "UTF-8"})
+        kargs.update({'content_type': "application/json"})
         super(WSGIAPIException, self).__init__(*pargs, **kargs)
         # Response.__init__(self, *pargs, **kargs)
         # for now, all smarterer API calls are responded to as
