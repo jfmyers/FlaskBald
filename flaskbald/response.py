@@ -90,6 +90,7 @@ def request_data():
 	return data
 
 
+
 class APIException(Exception):
     '''Base exception class for all Mylestoned API exceptions'''
     def __init__(self, message):
@@ -109,11 +110,9 @@ class WSGIAPIException(Response, APIException):
             kargs['status'] = self.http_status
         kargs.update({'content_type': "application/json"})
         super(WSGIAPIException, self).__init__(*pargs, **kargs)
-        # Response.__init__(self, *pargs, **kargs)
-        # for now, all smarterer API calls are responded to as
-        # JSON
-        # self.content_type = "application/json"
-        # self.charset = "UTF-8"
+
+        self.content_type = "application/json"
+        self.charset = "UTF-8"
         message = self.body or self.message or self.status
         self.data = {'status': 'error', 'message': message, 'code': self.http_status}
         self.body = json.dumps(self.data)
@@ -156,3 +155,7 @@ class APIUserUnsubscribed(APIUnauthorized):
 
     (Inherits 401/Unauthorized status)
     """
+
+class APIRequiredParameter(APIBadRequest):
+	pass
+

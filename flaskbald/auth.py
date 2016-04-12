@@ -21,28 +21,38 @@ def decode_jwt(token, secret, algorithm='HS256'):
 	return jwt.decode(token, secret, algorithm=algorithm)
 
 
-def user_required(orig_func=None, jwt_cookie_key='jwt'):
+def _auth_error():
+	raise APIUnauthorized("User authentication is required to access this resource.")
 
-	def _auth_error():
-		raise APIUnauthorized("User authentication is required to access this resource.")
+
+def get_jwt(jwt_cookie_key='jwt'):
+	secret = current_app.config.get('JWT_AUTH_SECRET')
+	if not secret:
+		raise APIError("JWT secret not specified. Contact hello@mylestoned.com for assistance.")
+
+	jwtoken = request.cookies.get(jwt_cookie_key)
+	if not jwtoken:
+		_auth_error()
+
+	try:
+		decoded = decode_jwt(jwtoken, secret)
+	except jwt.ExpiredSignatureError:
+		_auth_error()
+
+	user_id = decoded.get('user_id')
+	if not user_id:
+		_auth_error()
+
+	return decoded
+
+
+def user_required(orig_func=None, jwt_cookie_key='jwt'):
 
 	def requirement(orig_func):
 		'''Requirement decorator.'''
 		@wraps(orig_func)
 		def replacement(*pargs, **kargs):
-			secret = current_app.config.get('JWT_AUTH_SECRET')
-			if not secret:
-				raise APIError("JWT secret not specified. Contact hello@mylestoned.com for assistance.")
-
-			jwtoken = request.cookies.get(jwt_cookie_key)
-			if not jwtoken:
-				_auth_error()
-
-			try:
-				decoded = decode_jwt(jwtoken, secret)
-			except jwt.ExpiredSignatureError:
-				_auth_error()
-
+			decoded = get_jwt(jwt_cookie_key=jwt_cookie_key)
 			user_id = decoded.get('user_id')
 			if not user_id:
 				_auth_error()
@@ -56,3 +66,9 @@ def user_required(orig_func=None, jwt_cookie_key='jwt'):
 	else:
 		return requirement(orig_func)
 
+
+def get_current_user(jwt_cookie_key='jwt'):
+	decoded = get_jwt(jwt_cookie_key=jwt_cookie_key)
+	return {
+		'id': decoded.get('user_id')
+	}
