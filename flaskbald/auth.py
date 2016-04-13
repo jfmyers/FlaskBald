@@ -36,7 +36,7 @@ def get_jwt(jwt_cookie_key='jwt'):
 
 	try:
 		decoded = decode_jwt(jwtoken, secret)
-	except jwt.ExpiredSignatureError:
+	except (jwt.ExpiredSignatureError, jwt.DecodeError):
 		_auth_error()
 
 	user_id = decoded.get('user_id')
