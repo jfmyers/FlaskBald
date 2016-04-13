@@ -68,7 +68,12 @@ def user_required(orig_func=None, jwt_cookie_key='jwt'):
 
 
 def get_current_user(jwt_cookie_key='jwt'):
-	decoded = get_jwt(jwt_cookie_key=jwt_cookie_key)
+	'''Get the current logged-in user, if user is logged-in'''
+	try:
+		decoded = get_jwt(jwt_cookie_key=jwt_cookie_key)
+	except (APIError, APIUnauthorized):
+		decoded = {}
+
 	return {
 		'id': decoded.get('user_id')
 	}
