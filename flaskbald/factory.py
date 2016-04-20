@@ -135,6 +135,29 @@ def init_db(app):
 	return app
 
 
+def setup_routes(app):
+	routes = {}
+	print '{:40s} {:45s} {}'.format(
+			'Function', 'Valid Methods', 'Route'
+	)
+	for rule in app.url_map.iter_rules():
+		routes[rule.endpoint] = {
+			'url': rule.rule if rule.rule else None,
+			'methods': rule.methods if rule.methods else [],
+			'args': {arg:arg for arg in rule.arguments} if rule.arguments else {}
+		}
+
+		methods = rule.methods #[m for m in rule.methods if m not in ('HEAD', 'OPTIONS')]
+		print '{:40s} {:45s} {}'.format(
+			rule.endpoint,
+			' '.join(methods),
+			rule.rule
+		)
+
+	app.config['routes'] = routes
+	return app
+
+
 def create_app(config_file, blue_prints=[], custom_error_endpoints=False,
 			   custom_template_path=None, custom_before_handler=None,
 			   custom_before_handler_args=[], custom_before_handler_kargs={},
@@ -160,6 +183,7 @@ def create_app(config_file, blue_prints=[], custom_error_endpoints=False,
 	app = before_handler(app, custom_before_handler, custom_before_handler_args, custom_before_handler_kargs)
 	app = after_handler(app, custom_after_handler, custom_after_handler_args, custom_after_handler_kargs)
 	app = init_db(app)
+	app = setup_routes(app)
 
 	if cors is True:
 		cors = CORS(app)
