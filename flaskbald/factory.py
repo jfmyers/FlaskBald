@@ -27,15 +27,6 @@ def load_config(app, config_file=None, env='development'):
 
 	return app
 
-	# var = 'APP_ENV'
-	# if env is None and var in os.environ:
-	# 	env = os.environ[var]
-
-	# if env in config_files:
-	# 	app.config.from_pyfile(config_files[env])
-
-	# return app
-
 
 def setup_templates(app, custom_template_path=None):
 	base_template_dir = os.path.join(
@@ -103,7 +94,7 @@ def before_handler(app, custom_handler, custom_handler_args, custom_handler_karg
 	return app
 
 
-def after_handler(app, custom_handler, custom_handler_args, custom_handler_kargs):
+def after_handler(app, custom_handler, custom_handler_args, custom_handler_kargs, db_enabled):
 
 	if custom_handler:
 		@app.after_request
@@ -115,14 +106,15 @@ def after_handler(app, custom_handler, custom_handler_args, custom_handler_kargs
 
 	@app.after_request
 	def after_request(response):
-		# Commit the session
-		db.session.commit()
+		if db_enabled:
+			# Commit the session
+			db.session.commit()
 
-		# Close the session
-		db.session.close()
+			# Close the session
+			db.session.close()
 
-		# Remove the session
-		db.session.remove()
+			# Remove the session
+			db.session.remove()
 
 		# Return the response object
 		return response
@@ -163,7 +155,7 @@ def create_app(config_file, blue_prints=[], custom_error_endpoints=False,
 			   custom_before_handler_args=[], custom_before_handler_kargs={},
 			   custom_after_handler=None, custom_after_handler_args=[],
 			   custom_after_handler_kargs={}, template_folder=None,
-			   cors=True, ssl_only=True):
+			   cors=True, ssl_only=True, db_enabled=True):
 
 	if config_file is None:
 		raise(Exception("Hey, 'config_files' cannot be 'None'!"))
@@ -181,8 +173,9 @@ def create_app(config_file, blue_prints=[], custom_error_endpoints=False,
 	app = register_blue_prints(app, blue_prints)
 	app = error_endpoints(app, custom_error_endpoints)
 	app = before_handler(app, custom_before_handler, custom_before_handler_args, custom_before_handler_kargs)
-	app = after_handler(app, custom_after_handler, custom_after_handler_args, custom_after_handler_kargs)
-	app = init_db(app)
+	app = after_handler(app, custom_after_handler, custom_after_handler_args, custom_after_handler_kargs, db_enabled)
+	if db_enabled:
+		app = init_db(app)
 	app = setup_routes(app)
 
 	if cors is True:
@@ -197,36 +190,5 @@ def create_app(config_file, blue_prints=[], custom_error_endpoints=False,
 
 
 def create_celery_app(app):
-    celery.init_app(app)
-    return celery
-
-
-	# return (
-	# 	init_db(
-	# 		after_handler(
-	# 			before_handler(
-	# 				error_endpoints(
-	# 					register_blue_prints(
-	# 						setup_debug_log(
-	# 							setup_templates(
-	# 								load_config(
-	# 									Flask(__name__),
-	# 									config_file
-	# 								),
-	# 								custom_template_path
-	# 							)
-	# 						),
-	# 						blue_prints
-	# 					),
-	# 					custom_error_endpoints
-	# 				),
-	# 				custom_before_handler,
-	# 				custom_before_handler_args,
-	# 				custom_before_handler_kargs
-	# 			),
-	# 			custom_after_handler,
-	# 			custom_after_handler_args,
-	# 			custom_after_handler_kargs
-	# 		)
-	# 	)
-	# )
+	celery.init_app(app)
+	return celery
