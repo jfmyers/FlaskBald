@@ -33,12 +33,7 @@ class FlaskCelery(Celery):
 
     def init_app(self, app):
         self.app = app
-
-        class Config:
-            CELERY_BROKER_URL = app.config['CELERY_BROKER_URL']
-            CELERY_IMPORTS = app.config['CELERY_IMPORTS']
-
-        self.config_from_object(Config)
+        self.config_from_object(app.config)
         self.patch_task()
 
 
