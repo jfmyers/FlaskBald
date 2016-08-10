@@ -7,13 +7,11 @@ from db_ext import db
 
 class FlaskCelery(Celery):
 
-    # def __init__(self, *args, **kwargs):
-
-    #     super(FlaskCelery, self).__init__(*args, **kwargs)
-    #     if 'app' in kwargs:
-    #         self.init_app(kwargs['app'])
-
-    #     self.patch_task()
+    def __init__(self, *args, **kwargs):
+        super(FlaskCelery, self).__init__(*args, **kwargs)
+        if 'app' in kwargs:
+			self.app = kwargs['app']
+        self.patch_task()
 
     def patch_task(self):
         TaskBase = self.Task
@@ -30,11 +28,6 @@ class FlaskCelery(Celery):
                         return TaskBase.__call__(self, *args, **kwargs)
 
         self.Task = ContextTask
-
-    def init_app(self, app):
-        self.app = app
-        self.config_from_object(app.config)
-        self.patch_task()
 
 
 def flaskbald_task(**kargs):
