@@ -2,7 +2,7 @@
 # encoding: utf-8
 from flask import Flask, render_template, request
 from db_ext import db
-from celery_ext import FlaskCelery
+from celery_ext import celery
 from response import APINotFound, api_action
 from log import default_debug_log
 from flask.ext.cors import CORS, cross_origin
@@ -190,5 +190,5 @@ def create_app(config_file, blue_prints=[], custom_error_endpoints=False,
 
 
 def create_celery_app(app):
-	return FlaskCelery(app.import_name, broker=app.config['CELERY_BROKER_URL'],
-					   include=app.config['CELERY_IMPORTS'], app=app)
+	celery.init_app(app)
+	return celery
