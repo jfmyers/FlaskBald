@@ -57,4 +57,4 @@ def flaskbald_task(**kargs):
     return requirement
 
 
-# celery = FlaskCelery()
+celery = FlaskCelery()
