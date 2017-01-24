@@ -28,7 +28,7 @@ def load_config(app, config_file=None, env='development'):
     return app
 
 
-def setup_templates(app, custom_template_path=None):
+def setup_templates(app, custom_template_paths=[]):
     base_template_dir = os.path.join(
         os.path.abspath(os.path.dirname(__file__)),
         'default_templates'
@@ -38,10 +38,9 @@ def setup_templates(app, custom_template_path=None):
         app.jinja_loader,
         jinja2.FileSystemLoader(base_template_dir)]
 
-    if custom_template_path:
-        template_paths.append(
-            jinja2.FileSystemLoader(custom_template_path)
-        )
+    if custom_template_paths:
+        for cp in custom_template_paths:
+            template_paths.append(jinja2.FileSystemLoader(cp))
 
     app.jinja_loader = jinja2.ChoiceLoader(template_paths)
     return app
@@ -150,46 +149,44 @@ def setup_routes(app):
     return app
 
 
-class FlaskBald(object):
+def create_app(config_file, blueprints=[], custom_error_endpoints=False,
+               custom_template_paths=[], custom_before_handler=None,
+               custom_before_handler_args=[], custom_before_handler_kargs={},
+               custom_after_handler=None, custom_after_handler_args=[],
+               custom_after_handler_kargs={}, template_folder=None,
+               cors=True, ssl_only=True, db_enabled=True):
 
-    def __init__(config_file, blue_prints=[], custom_error_endpoints=False,
-                   custom_template_path=None, custom_before_handler=None,
-                   custom_before_handler_args=[], custom_before_handler_kargs={},
-                   custom_after_handler=None, custom_after_handler_args=[],
-                   custom_after_handler_kargs={}, template_folder=None,
-                   cors=True, ssl_only=True, db_enabled=True):
+    if config_file is None:
+        raise(Exception("Hey, 'config_files' cannot be 'None'!"))
 
-        if config_file is None:
-            raise(Exception("Hey, 'config_files' cannot be 'None'!"))
+    app = Flask(__name__) if not template_folder else Flask(__name__, template_folder=template_folder)
+    app = load_config(app, config_file)
 
-        app = Flask(__name__) if not template_folder else Flask(__name__, template_folder=template_folder)
-        app = load_config(app, config_file)
+    if ssl_only is True and app.config.get("DEBUG") is False:
+        print 'SSL this shit!'
+        print ''
+        sslify = SSLify(app)
 
-        if ssl_only is True and app.config.get("DEBUG") is False:
-            print 'SSL this shit!'
-            print ''
-            sslify = SSLify(app)
+    app = setup_templates(app, custom_template_paths)
+    app = setup_debug_log(app)
+    app = register_blue_prints(app, blueprints)
+    app = error_endpoints(app, custom_error_endpoints)
+    app = before_handler(app, custom_before_handler, custom_before_handler_args, custom_before_handler_kargs)
+    app = after_handler(app, custom_after_handler, custom_after_handler_args, custom_after_handler_kargs, db_enabled)
+    if db_enabled:
+        app = init_db(app)
+    app = setup_routes(app)
 
-        app = setup_templates(app, custom_template_path)
-        app = setup_debug_log(app)
-        app = register_blue_prints(app, blue_prints)
-        app = error_endpoints(app, custom_error_endpoints)
-        app = before_handler(app, custom_before_handler, custom_before_handler_args, custom_before_handler_kargs)
-        app = after_handler(app, custom_after_handler, custom_after_handler_args, custom_after_handler_kargs, db_enabled)
-        if db_enabled:
-            app = init_db(app)
-        app = setup_routes(app)
+    if cors is True:
+        cors = CORS(app)
+        app.config['CORS_HEADERS'] = 'Content-Type'
 
-        if cors is True:
-            cors = CORS(app)
-            app.config['CORS_HEADERS'] = 'Content-Type'
+    if app.config.get('DEBUG') is False:
+        mail = Mail(app)
+        mail_on_500(app, app.config.get('ADMINS'))
 
-        if app.config.get('DEBUG') is False:
-            mail = Mail(app)
-            mail_on_500(app, app.config.get('ADMINS'))
-
-        self.app = app
-        return app
+    self.app = app
+    return app
 
 
 def create_celery_app(app):
