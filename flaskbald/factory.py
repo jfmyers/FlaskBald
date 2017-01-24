@@ -185,7 +185,6 @@ def create_app(config_file, blueprints=[], custom_error_endpoints=False,
         mail = Mail(app)
         mail_on_500(app, app.config.get('ADMINS'))
 
-    self.app = app
     return app
 
 
