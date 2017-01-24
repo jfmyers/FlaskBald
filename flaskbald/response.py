@@ -1,93 +1,122 @@
 #!/usr/bin/env python
 # encoding: utf-8
+from flask import request, Response, current_app, render_template
 from webob import Response
 from functools import wraps
 import json
-# from flask.ext.cors import CORS, cross_origin
-# from werkzeug.wrappers import Response
+from template import template_functions
+
+
+def action(orig_func):
+    '''
+    Return rendered template with environment data and template functions.
+    '''
+    @wraps(orig_func)
+    def replacement(*args, **kargs):
+        handler_response = orig_func(*args, **kargs)
+        if type(handler_response) is tuple or type(handler_response) is list:
+            current_app.jinja_env.globals.update(**template_functions)
+            template = handler_response[0]
+            data = handler_response[1]
+            if not data or type(data) is not dict:
+                data = dict()
+
+            data.update({
+                'ENV': current_app.config.get("ENV"),
+                'PROD': current_app.config.get("PROD"),
+                'DEV': current_app.config.get("DEV"),
+                'STAGING': current_app.config.get("STAGING"),
+                'MIXPANEL_TOKEN': current_app.config.get("MIXPANEL_TOKEN"),
+                "GA_TOKEN": current_app.config.get("GA_TOKEN")
+            })
+            return render_template(template, **data)
+        else:
+            return handler_response
+
+    return replacement
 
 
 def json_response(body, status, status_code=200, jwt_cookie=None):
-	'''
-	Return response JSON encoded with proper headers.
-	'''
-	resp = Response(json.dumps({"status": "success", "data": body}),
-					status=status, content_type="application/json",
-					charset='utf-8')
+    '''
+    Return response JSON encoded with proper headers.
+    '''
+    resp = Response(json.dumps({"status": "success", "data": body}),
+                    status=status, content_type="application/json",
+                    charset='utf-8')
 
-	# resp = Response(json.dumps({"status": "success", "data": body}))
-	# resp.status_code = status_code
-	# resp.status = status
-	# resp.headers['Content-Type'] = "application/json; charset=utf-8"
-	# resp.headers['Access-Control-Expose-Headers'] = 'Access-Control-Allow-Origin'
-	# resp.headers['Access-Control-Allow-Headers'] = 'Origin, X-Requested-With, Content-Type, Accept'
+    # resp = Response(json.dumps({"status": "success", "data": body}))
+    # resp.status_code = status_code
+    # resp.status = status
+    # resp.headers['Content-Type'] = "application/json; charset=utf-8"
+    # resp.headers['Access-Control-Expose-Headers'] = 'Access-Control-Allow-Origin'
+    # resp.headers['Access-Control-Allow-Headers'] = 'Origin, X-Requested-With, Content-Type, Accept'
 
-	if jwt_cookie:
-		resp.set_cookie(key="jwt", value=jwt_cookie.get('token'),
-						httponly=True)
-		# resp.set_cookie('jwt', jwt_cookie.get('token'), httponly=True)
+    if jwt_cookie:
+        resp.set_cookie(key="jwt", value=jwt_cookie.get('token'),
+                        httponly=True)
+        # resp.set_cookie('jwt', jwt_cookie.get('token'), httponly=True)
 
-	resp.headers.update({
-		# 'Access-Control-Allow-Origin': '*',
-		'Access-Control-Expose-Headers': 'Access-Control-Allow-Origin',
-		'Access-Control-Allow-Headers': 'Origin, X-Requested-With, Content-Type, Accept',
-	})
+    resp.headers.update({
+        # 'Access-Control-Allow-Origin': '*',
+        'Access-Control-Expose-Headers': 'Access-Control-Allow-Origin',
+        'Access-Control-Allow-Headers': 'Origin, X-Requested-With, Content-Type, Accept',
+    })
 
-	return resp
+    return resp
 
 
 def api_action(orig_func=None, set_jwt_cookie=False):
-	"""
-	Decorator that wraps an action in API goodness.
+    """
+    Decorator that wraps an action in API goodness.
 
-	The orig_func is expected to return any JSON-serializable python data
-	structure, or raise any ApiException (which will be wrapped in a
-	standard JSON structure).
+    The orig_func is expected to return any JSON-serializable python data
+    structure, or raise any ApiException (which will be wrapped in a
+    standard JSON structure).
 
-	"""
-	def actual_decorator(orig_func):
-		@wraps(orig_func)
-		# @cross_origin()
-		def replacement(*args, **kargs):
-			try:
-				handler_response = orig_func(*args, **kargs)
-			except APIError as api_error_response:
-				return api_error_response
+    """
+    def actual_decorator(orig_func):
+        @wraps(orig_func)
+        # @cross_origin()
+        def replacement(*args, **kargs):
+            try:
+                handler_response = orig_func(*args, **kargs)
+            except APIError as api_error_response:
+                return api_error_response
 
-			# return the response or reformat for proper response
-			if isinstance(handler_response, Response):
-				return handler_response
-			else:
-				jwt_cookie = None
-				if set_jwt_cookie and handler_response.get('token'):
-					jwt_cookie = {'token': handler_response.get('token')}
-				return json_response(handler_response, status='200 OK', jwt_cookie=jwt_cookie)
-		return replacement
+            # return the response or reformat for proper response
+            if isinstance(handler_response, Response):
+                return handler_response
+            else:
+                jwt_cookie = None
+                if set_jwt_cookie and handler_response.get('token'):
+                    jwt_cookie = {'token': handler_response.get('token')}
+                return json_response(handler_response, status='200 OK', jwt_cookie=jwt_cookie)
+        return replacement
 
 
-	if not orig_func:
-		def waiting_for_func(orig_func):
-			return actual_decorator(orig_func)
-		return waiting_for_func
-	else:
-		return actual_decorator(orig_func)
+    if not orig_func:
+        def waiting_for_func(orig_func):
+            return actual_decorator(orig_func)
+        return waiting_for_func
+    else:
+        return actual_decorator(orig_func)
 
 
 def request_data():
-	'''
-	Retrieve the data from this Flask app's context,
-	decode and return as Python dict.
-	'''
-	from flask import request
-	data = request.get_data()
-	if data is None:
-		data = {}
-	else:
-		try:
-			data = json.loads(data)
-		except ValueError:
-			data = {}
-	return data
+    '''
+    Retrieve the data from this Flask app's context,
+    decode and return as Python dict.
+    '''
+    from flask import request
+    data = request.get_data()
+    if data is None:
+        data = {}
+    else:
+        try:
+            data = json.loads(data)
+        except ValueError:
+            data = {}
+    return data
 
 
 
@@ -157,5 +186,4 @@ class APIUserUnsubscribed(APIUnauthorized):
     """
 
 class APIRequiredParameter(APIBadRequest):
-	pass
-
+    pass

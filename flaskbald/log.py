@@ -96,5 +96,3 @@ class LogPoint(object):
         resp = self.application(environ, start_response)
         log.debug(self.log.format(' {0} '.format(self.end_message)))
         return resp
-
-

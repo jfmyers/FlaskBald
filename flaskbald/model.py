@@ -24,17 +24,16 @@ from flaskbald.text import camel_to_underscore, pluralize
 
 # the surrogate_pk template that assures that surrogate primary keys
 # are all the same and ordered with the pk first in the table
-surrogate_pk_template = sa.Column(sa.Integer, nullable=False,
-										  	  primary_key=True)
+surrogate_pk_template = sa.Column(sa.Integer, nullable=False, primary_key=True)
 
 
 def get_models(module):
-	models_dict = {}
-	def assign_attr(item):
-		models_dict[item] = getattr(module, item)
+    models_dict = {}
+    def assign_attr(item):
+        models_dict[item] = getattr(module, item)
 
-	map(assign_attr, dir(module))
-	return models_dict
+    map(assign_attr, dir(module))
+    return models_dict
 
 
 def create_dump_engine(app):
@@ -57,144 +56,144 @@ def create_dump_engine(app):
 
 def create_model(db):
 
-	class Model(db.Model):
+    class Model(db.Model):
 
-		__abstract__  = True
+        __abstract__  = True
 
-		id            = db.Column(db.Integer, primary_key=True)
-		date_created  = db.Column(db.DateTime,  default=db.func.current_timestamp())
-		date_modified = db.Column(db.DateTime,  default=db.func.current_timestamp(),
-											  	onupdate=db.func.current_timestamp())
-		
-		NotFound = sa.orm.exc.NoResultFound
-		MultipleFound = sa.orm.exc.MultipleResultsFound
+        id            = db.Column(db.Integer, primary_key=True)
+        date_created  = db.Column(db.DateTime,  default=db.func.current_timestamp())
+        date_modified = db.Column(db.DateTime,  default=db.func.current_timestamp(),
+                                                  onupdate=db.func.current_timestamp())
 
-		def is_modified(self):
-			'''Check if SQLAlchemy believes this instance is modified.'''
-			return instance_state(self).modified
+        NotFound = sa.orm.exc.NoResultFound
+        MultipleFound = sa.orm.exc.MultipleResultsFound
 
-		def clear_modified(self):
-			'''
-			Unconditionally clear all modified state from the attibutes on
-			this instance.
-			'''
-			return instance_state(self)._commit_all({})
+        def is_modified(self):
+            '''Check if SQLAlchemy believes this instance is modified.'''
+            return instance_state(self).modified
 
-		def is_persisted(self):
-			'''
-			Check if this instance has ever been persisted. Means it is either
-			`detached` or `persistent`.
-			'''
-			return has_identity(self)
+        def clear_modified(self):
+            '''
+            Unconditionally clear all modified state from the attibutes on
+            this instance.
+            '''
+            return instance_state(self)._commit_all({})
 
-		def flush(self):
-			'''
-			Syncs all pending SQL changes (including other pending objects) to
-			the underlying data store within the current transaction.
+        def is_persisted(self):
+            '''
+            Check if this instance has ever been persisted. Means it is either
+            `detached` or `persistent`.
+            '''
+            return has_identity(self)
 
-			Flush emits all the relevant SQL to the underlying store, but does
-			**not** commit the current transaction or close the current
-			database session.
-			'''
-			db.session.flush()
-			return self
+        def flush(self):
+            '''
+            Syncs all pending SQL changes (including other pending objects) to
+            the underlying data store within the current transaction.
 
-		def save(self, flush=False):
-			'''
-			Saves (adds) this instance in the current databse session.
+            Flush emits all the relevant SQL to the underlying store, but does
+            **not** commit the current transaction or close the current
+            database session.
+            '''
+            db.session.flush()
+            return self
 
-			This does not immediatly persist the data since these operations
-			occur within a transaction and the sqlalchemy unit-of-work pattern.
-			If something causes a rollback before the session is committed,
-			these changes will be lost.
+        def save(self, flush=False):
+            '''
+            Saves (adds) this instance in the current databse session.
 
-			When flush is `True`, flushes the data to the database immediately
-			**within the same transaction**. This does not commit the transaction,
-			for that use :py:meth:`~pybald.db.models.Model.commit`)
-			'''
-			db.session.add(self)
-			if flush:
-				self.flush()
-			return self
+            This does not immediatly persist the data since these operations
+            occur within a transaction and the sqlalchemy unit-of-work pattern.
+            If something causes a rollback before the session is committed,
+            these changes will be lost.
 
-		def delete(self, flush=False):
-			'''
-			Delete this instance from the current database session.
+            When flush is `True`, flushes the data to the database immediately
+            **within the same transaction**. This does not commit the transaction,
+            for that use :py:meth:`~pybald.db.models.Model.commit`)
+            '''
+            db.session.add(self)
+            if flush:
+                self.flush()
+            return self
 
-			The object will be deleted from the database at the next commit. If
-			you want to immediately delete the object, you should follow this
-			operation with a commit to emit the SQL to delete the item from
-			the database and commit the transaction.
-			'''
-			db.session.delete(self)
-			if flush:
-			    self.flush()
-			return self
+        def delete(self, flush=False):
+            '''
+            Delete this instance from the current database session.
 
-		def commit(self):
-			'''
-			Commits the entire database session (including other pending objects).
+            The object will be deleted from the database at the next commit. If
+            you want to immediately delete the object, you should follow this
+            operation with a commit to emit the SQL to delete the item from
+            the database and commit the transaction.
+            '''
+            db.session.delete(self)
+            if flush:
+                self.flush()
+            return self
 
-			This emits all relevant SQL to the databse, commits the current
-			transaction, and closes the current session (and database connection)
-			and returns it to the connection pool. Any data operations after this
-			will pull a new database session from the connection pool.
-			'''
-			db.session.commit()
-			return self
+        def commit(self):
+            '''
+            Commits the entire database session (including other pending objects).
 
-		@classmethod
-		def get(cls, **where):
-			'''
-			A convenience method that constructs a load query with keyword
-			arguments as the filter arguments and return a single instance.
-			'''
-			return cls.load(**where).one()
+            This emits all relevant SQL to the databse, commits the current
+            transaction, and closes the current session (and database connection)
+            and returns it to the connection pool. Any data operations after this
+            will pull a new database session from the connection pool.
+            '''
+            db.session.commit()
+            return self
 
-		@classmethod
-		def all(cls, **where):
-			'''
-			Returns a collection of objects that can be filtered for
-			specific collections.
+        @classmethod
+        def get(cls, **where):
+            '''
+            A convenience method that constructs a load query with keyword
+            arguments as the filter arguments and return a single instance.
+            '''
+            return cls.load(**where).one()
 
-			all() without arguments returns all the items of the model type.
-			'''
-			return cls.load(**where).all()
+        @classmethod
+        def all(cls, **where):
+            '''
+            Returns a collection of objects that can be filtered for
+            specific collections.
 
-		@classmethod
-		def load(cls, **where):
-			'''
-			Convenience method to build a sqlalchemy query to return stored
-			objects.
+            all() without arguments returns all the items of the model type.
+            '''
+            return cls.load(**where).all()
 
-			Returns a query object. This query object must be executed to retrieve
-			actual items from the database.
-			'''
-			if where:
-				return db.session.query(cls).filter_by(**where)
-			else:
-				return db.session.query(cls)
+        @classmethod
+        def load(cls, **where):
+            '''
+            Convenience method to build a sqlalchemy query to return stored
+            objects.
 
-		@classmethod
-		def filter(cls, *pargs, **kargs):
-			'''
-			Convenience method that auto-builds the query and passes the filter
-			to it.
+            Returns a query object. This query object must be executed to retrieve
+            actual items from the database.
+            '''
+            if where:
+                return db.session.query(cls).filter_by(**where)
+            else:
+                return db.session.query(cls)
 
-			Returns a query object.
-			'''
-			return db.session.query(cls).filter(*pargs, **kargs)
+        @classmethod
+        def filter(cls, *pargs, **kargs):
+            '''
+            Convenience method that auto-builds the query and passes the filter
+            to it.
 
-		@classmethod
-		def query(cls):
-			'''
-			Convenience method to return a query based on the current object
-			class.
-			'''
-			return db.session.query(cls)
+            Returns a query object.
+            '''
+            return db.session.query(cls).filter(*pargs, **kargs)
 
-		# @classmethod
-		# def show_create_table(cls):
-		# 	cls.__table__.create(create_dump_engine(app))
-	
-	return Model
+        @classmethod
+        def query(cls):
+            '''
+            Convenience method to return a query based on the current object
+            class.
+            '''
+            return db.session.query(cls)
+
+        # @classmethod
+        # def show_create_table(cls):
+        #     cls.__table__.create(create_dump_engine(app))
+
+    return Model

@@ -18,177 +18,180 @@ ALL_HOSTS = '*'
 
 
 def load_config(app, config_file=None, env='development'):
-	if not config_file:
-		return app
+    if not config_file:
+        return app
 
-	app.config.from_pyfile(config_file)
-	if not app.config.get(ALLOWED_HOSTS):
-		app.config.update({ALLOWED_HOSTS: ALL_HOSTS})
+    app.config.from_pyfile(config_file)
+    if not app.config.get(ALLOWED_HOSTS):
+        app.config.update({ALLOWED_HOSTS: ALL_HOSTS})
 
-	return app
+    return app
 
 
 def setup_templates(app, custom_template_path=None):
-	base_template_dir = os.path.join(
-		os.path.abspath(os.path.dirname(__file__)),
-		'default_templates'
-	)
+    base_template_dir = os.path.join(
+        os.path.abspath(os.path.dirname(__file__)),
+        'default_templates'
+    )
 
-	template_paths = [
-		app.jinja_loader,
-		jinja2.FileSystemLoader(base_template_dir)]
+    template_paths = [
+        app.jinja_loader,
+        jinja2.FileSystemLoader(base_template_dir)]
 
-	if custom_template_path:
-		template_paths.append(
-			jinja2.FileSystemLoader(custom_template_path)
-		)
+    if custom_template_path:
+        template_paths.append(
+            jinja2.FileSystemLoader(custom_template_path)
+        )
 
-	app.jinja_loader = jinja2.ChoiceLoader(template_paths)
-	return app
+    app.jinja_loader = jinja2.ChoiceLoader(template_paths)
+    return app
 
 
 def register_blue_prints(app, blue_prints):
-	for module in blue_prints:
-		app.register_blueprint(module)
-	return app
+    for module in blue_prints:
+        app.register_blueprint(module)
+    return app
 
 
 def setup_debug_log(app):
-	(app.config.get('DEBUG', False) == True and default_debug_log())
-	return app
+    (app.config.get('DEBUG', False) == True and default_debug_log())
+    return app
 
 
 def error_endpoints(app, custom_error_endpoints=False):
-	if custom_error_endpoints is True:
-		return app
+    if custom_error_endpoints is True:
+        return app
 
-	@app.errorhandler(404)
-	def not_found(error):
-		return render_template('404.html'), 404
+    @app.errorhandler(404)
+    def not_found(error):
+        return render_template('404.html'), 404
 
-	@app.errorhandler(500)
-	def not_found(error):
-		return render_template('500.html'), 500
+    @app.errorhandler(500)
+    def not_found(error):
+        return render_template('500.html'), 500
 
-	return app
+    return app
 
 
 def before_handler(app, custom_handler, custom_handler_args, custom_handler_kargs):
 
-	if custom_handler:
-		@app.before_request
-		def before_request():
-			custom_handler(*custom_handler_args, **custom_handler_kargs)
+    if custom_handler:
+        @app.before_request
+        def before_request():
+            custom_handler(*custom_handler_args, **custom_handler_kargs)
 
-		return app
+        return app
 
-	@app.before_request
-	def before_request():
-		origin_request = request.from_values()
-		if app.config[ALLOWED_HOSTS] != ALL_HOSTS and origin_request.host not in app.config[ALLOWED_HOSTS]:
-			if app.config.get('DEBUG', app.config.get('debug')):
-				return APINotFound(message="Invalid host: '{0}'".format(origin_request.host))
-			else:
-				return APINotFound()
+    @app.before_request
+    def before_request():
+        origin_request = request.from_values()
+        if app.config[ALLOWED_HOSTS] != ALL_HOSTS and origin_request.host not in app.config[ALLOWED_HOSTS]:
+            if app.config.get('DEBUG', app.config.get('debug')):
+                return APINotFound(message="Invalid host: '{0}'".format(origin_request.host))
+            else:
+                return APINotFound()
 
-	return app
+    return app
 
 
 def after_handler(app, custom_handler, custom_handler_args, custom_handler_kargs, db_enabled):
 
-	if custom_handler:
-		@app.after_request
-		def after_request(response):
-			custom_handler_kargs['response'] = response
-			return custom_handler(*custom_handler_args, **custom_handler_kargs)
+    if custom_handler:
+        @app.after_request
+        def after_request(response):
+            custom_handler_kargs['response'] = response
+            return custom_handler(*custom_handler_args, **custom_handler_kargs)
 
-		return app
+        return app
 
-	@app.after_request
-	def after_request(response):
-		if db_enabled:
-			# Commit the session
-			db.session.commit()
+    @app.after_request
+    def after_request(response):
+        if db_enabled:
+            # Commit the session
+            db.session.commit()
 
-			# Close the session
-			db.session.close()
+            # Close the session
+            db.session.close()
 
-			# Remove the session
-			db.session.remove()
+            # Remove the session
+            db.session.remove()
 
-		# Return the response object
-		return response
+        # Return the response object
+        return response
 
-	return app
+    return app
 
 
 def init_db(app):
-	db.init_app(app)
-	return app
+    db.init_app(app)
+    return app
 
 
 def setup_routes(app):
-	routes = {}
-	print '{:40s} {:45s} {}'.format(
-			'Function', 'Valid Methods', 'Route'
-	)
-	for rule in app.url_map.iter_rules():
-		routes[rule.endpoint] = {
-			'url': rule.rule if rule.rule else None,
-			'methods': rule.methods if rule.methods else [],
-			'args': {arg:arg for arg in rule.arguments} if rule.arguments else {}
-		}
+    routes = {}
+    print '{:40s} {:45s} {}'.format(
+            'Function', 'Valid Methods', 'Route'
+    )
+    for rule in app.url_map.iter_rules():
+        routes[rule.endpoint] = {
+            'url': rule.rule if rule.rule else None,
+            'methods': rule.methods if rule.methods else [],
+            'args': {arg:arg for arg in rule.arguments} if rule.arguments else {}
+        }
 
-		methods = rule.methods #[m for m in rule.methods if m not in ('HEAD', 'OPTIONS')]
-		print '{:40s} {:45s} {}'.format(
-			rule.endpoint,
-			' '.join(methods),
-			rule.rule
-		)
+        methods = rule.methods #[m for m in rule.methods if m not in ('HEAD', 'OPTIONS')]
+        print '{:40s} {:45s} {}'.format(
+            rule.endpoint,
+            ' '.join(methods),
+            rule.rule
+        )
 
-	app.config['routes'] = routes
-	return app
+    app.config['routes'] = routes
+    return app
 
 
-def create_app(config_file, blue_prints=[], custom_error_endpoints=False,
-			   custom_template_path=None, custom_before_handler=None,
-			   custom_before_handler_args=[], custom_before_handler_kargs={},
-			   custom_after_handler=None, custom_after_handler_args=[],
-			   custom_after_handler_kargs={}, template_folder=None,
-			   cors=True, ssl_only=True, db_enabled=True):
+class FlaskBald(object):
 
-	if config_file is None:
-		raise(Exception("Hey, 'config_files' cannot be 'None'!"))
+    def __init__(config_file, blue_prints=[], custom_error_endpoints=False,
+                   custom_template_path=None, custom_before_handler=None,
+                   custom_before_handler_args=[], custom_before_handler_kargs={},
+                   custom_after_handler=None, custom_after_handler_args=[],
+                   custom_after_handler_kargs={}, template_folder=None,
+                   cors=True, ssl_only=True, db_enabled=True):
 
-	app = Flask(__name__) if not template_folder else Flask(__name__, template_folder=template_folder)
-	app = load_config(app, config_file)
+        if config_file is None:
+            raise(Exception("Hey, 'config_files' cannot be 'None'!"))
 
-	if ssl_only is True and app.config.get("DEBUG") is False:
-		print 'SSL this shit!'
-		print ''
-		sslify = SSLify(app)
+        app = Flask(__name__) if not template_folder else Flask(__name__, template_folder=template_folder)
+        app = load_config(app, config_file)
 
-	app = setup_templates(app, custom_template_path)
-	app = setup_debug_log(app)
-	app = register_blue_prints(app, blue_prints)
-	app = error_endpoints(app, custom_error_endpoints)
-	app = before_handler(app, custom_before_handler, custom_before_handler_args, custom_before_handler_kargs)
-	app = after_handler(app, custom_after_handler, custom_after_handler_args, custom_after_handler_kargs, db_enabled)
-	if db_enabled:
-		app = init_db(app)
-	app = setup_routes(app)
+        if ssl_only is True and app.config.get("DEBUG") is False:
+            print 'SSL this shit!'
+            print ''
+            sslify = SSLify(app)
 
-	if cors is True:
-		cors = CORS(app)
-		app.config['CORS_HEADERS'] = 'Content-Type'
+        app = setup_templates(app, custom_template_path)
+        app = setup_debug_log(app)
+        app = register_blue_prints(app, blue_prints)
+        app = error_endpoints(app, custom_error_endpoints)
+        app = before_handler(app, custom_before_handler, custom_before_handler_args, custom_before_handler_kargs)
+        app = after_handler(app, custom_after_handler, custom_after_handler_args, custom_after_handler_kargs, db_enabled)
+        if db_enabled:
+            app = init_db(app)
+        app = setup_routes(app)
 
-	if app.config.get('DEBUG') is False:
-		mail = Mail(app)
-		mail_on_500(app, app.config.get('ADMINS'))
+        if cors is True:
+            cors = CORS(app)
+            app.config['CORS_HEADERS'] = 'Content-Type'
 
-	return app
+        if app.config.get('DEBUG') is False:
+            mail = Mail(app)
+            mail_on_500(app, app.config.get('ADMINS'))
+
+        self.app = app
+        return app
 
 
 def create_celery_app(app):
-	celery.init_app(app)
-	return celery
+    celery.init_app(app)
+    return celery
