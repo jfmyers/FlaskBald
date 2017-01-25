@@ -15,7 +15,7 @@ def get_manifest_filename(filename):
         return None
 
     with open(manifest_file_path) as content:
-        manifest = json.loads(content)
+        manifest = json.loads(content.read())
     return manifest[filename]
 
 
