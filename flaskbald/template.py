@@ -3,7 +3,7 @@ import json
 import os
 
 def asset_url(filename):
-    url = '{}/{}'.format(app.config.get('STATIC_ASSET_JS_URL', '.'), app.manifest[filename])
+    url = '{}/{}'.format(current_app.config.STATIC_ASSET_JS_URL, app.manifest[filename])
     return url
 
 
