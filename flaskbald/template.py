@@ -1,6 +1,22 @@
 import json
 import os
 
+def asset_url(filename):
+    url = '{}/{}'.format(app.config.get('STATIC_ASSET_JS_URL', '.'), app.manifest[filename])
+    return url
+
+
+def get_manifest_filename(filename):
+    from memory_site.run import BASE_DIR
+    manifest_file_path = os.path.join(BASE_DIR, 'static', 'manifest.json')
+
+    if not os.path.exists(manifest_file_path):
+        return None
+
+    with open(manifest_file_path) as content:
+        manifest = json.loads(content)
+    return manifest[filename]
+
 
 def front_end_js_src():
     from memory_site.run import app
@@ -34,6 +50,7 @@ def front_end_hash():
 
 
 template_functions = {
+    "asset_url": asset_url,
     "front_end_js_src": front_end_js_src,
     "front_end_css_src": front_end_css_src,
     "front_end_hash": front_end_hash
