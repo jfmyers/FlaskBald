@@ -4,7 +4,7 @@ import os
 
 def asset_url(filename):
     static_url = current_app.config.get('STATIC_ASSET_JS_URL')
-    url = '{}/{}'.format(static_url, app.manifest[filename])
+    url = '{}/{}'.format(static_url, get_manifest_filename(filename))
     return url
 
 
