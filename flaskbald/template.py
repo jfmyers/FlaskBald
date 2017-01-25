@@ -3,12 +3,14 @@ import json
 import os
 
 def asset_url(filename):
-    url = '{}/{}'.format(current_app.config.STATIC_ASSET_JS_URL, app.manifest[filename])
+    static_url = current_app.config.get('STATIC_ASSET_JS_URL')
+    url = '{}/{}'.format(static_url, app.manifest[filename])
     return url
 
 
 def get_manifest_filename(filename):
-    manifest_file_path = os.path.join(current_app.config.BASE_DIR, 'static', 'manifest.json')
+    base_dir = current_app.config.get('BASE_DIR')
+    manifest_file_path = os.path.join(base_dir, 'static', 'manifest.json')
     if not os.path.exists(manifest_file_path):
         return None
 
