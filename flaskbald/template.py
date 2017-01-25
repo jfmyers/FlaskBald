@@ -1,3 +1,4 @@
+from flask import current_app
 import json
 import os
 
@@ -7,9 +8,7 @@ def asset_url(filename):
 
 
 def get_manifest_filename(filename):
-    from memory_site.run import BASE_DIR
-    manifest_file_path = os.path.join(BASE_DIR, 'static', 'manifest.json')
-
+    manifest_file_path = os.path.join(current_app.config.BASE_DIR, 'static', 'manifest.json')
     if not os.path.exists(manifest_file_path):
         return None
 
