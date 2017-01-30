@@ -58,7 +58,7 @@ def get_jwt_claims(jwt_key='Authorization'):
     return jwt_claims
 
 
-def user_required(orig_func=None, jwt_key='jwt'):
+def user_required(orig_func=None, jwt_key='Authorization'):
 
     def requirement(orig_func):
         '''Requirement decorator.'''
@@ -75,7 +75,7 @@ def user_required(orig_func=None, jwt_key='jwt'):
         return requirement(orig_func)
 
 
-def get_auth_id(jwt_key='jwt'):
+def get_auth_id(jwt_key='Authorization'):
     '''Get the current logged-in users auth id'''
     try:
         jwt_claims = get_jwt_claims(jwt_key=jwt_key)
