@@ -5,6 +5,7 @@ from flaskbald.response import APIError, APIUnauthorized
 from functools import wraps
 import jwt
 import json
+import logging
 
 
 def create_jwt(secret, payload={}, exp=date.utcnow() + timedelta(days=7),
@@ -27,22 +28,30 @@ def _auth_error():
 
 
 def get_jwt_claims(jwt_key='Authorization'):
+    logging.info("get_jwt_claims")
     secret = current_app.config.get('JWT_CLIENT_SECRET')
+    logging.info("secret: {0}".format(secret))
     audience = current_app.config.get('JWT_AUDIENCE')
+    logging.info("audience: {0}".format(audience))
 
     if not secret:
         raise APIError("JWT secret not specified. Contact hello@mylestoned.com for assistance.")
 
     jwtoken = request.headers.get(jwt_key, request.cookies.get(jwt_key))
+    logging.info("Request Headers: ")
+    logging.info(request.headers)
+    logging.info("jwtoken: {0}".format(jwtoken))
     if not jwtoken:
         _auth_error()
 
     try:
         jwt_claims = decode_jwt(jwtoken, secret, audience=audience)
     except (jwt.ExpiredSignatureError, jwt.DecodeError):
+        logging.info("JWT signature error")
         _auth_error()
 
     sub = jwt_claims.get('sub')
+    logging.info("Sub: {0}".format(sub))
     if not sub:
         _auth_error()
 
