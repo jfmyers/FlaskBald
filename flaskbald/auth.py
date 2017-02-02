@@ -31,7 +31,7 @@ def get_jwt_claims(jwt_key='Authorization'):
     logging.info("get_jwt_claims")
     secret = current_app.config.get('JWT_CLIENT_SECRET')
     logging.info("secret: {0}".format(secret))
-    audience = current_app.config.get('JWT_AUDIENCE')
+    audience = current_app.config.get('JWT_CLIENT_AUDIENCE')
     logging.info("audience: {0}".format(audience))
 
     if not secret:
