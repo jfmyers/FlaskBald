@@ -61,10 +61,11 @@ def user_required(orig_func=None, jwt_key='Authorization', redirect_url=None, co
         @wraps(orig_func)
         def replacement(*pargs, **kargs):
             jwt_claims = get_jwt_claims(jwt_key=jwt_key)
-            if not jwt_claims and redirect_url:
-                return redirect(redirect_url, code=code)
-            else:
-                raise APIUnauthorized("User authentication is required to access this resource.")
+            if not jwt_claims:
+                if redirect_url:
+                    return redirect(redirect_url, code=code)
+                else:
+                    raise APIUnauthorized("User authentication is required to access this resource.")
             return orig_func(*pargs, **kargs)
 
         return replacement
