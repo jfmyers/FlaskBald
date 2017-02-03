@@ -1,6 +1,6 @@
 from datetime import datetime as date, timedelta as timedelta
 import time
-from flask import request, current_app
+from flask import request, current_app, redirect
 from flaskbald.response import APIError, APIUnauthorized
 from functools import wraps
 import jwt
@@ -23,10 +23,6 @@ def decode_jwt(token, secret, audience=None, algorithm='HS256'):
     return jwt.decode(token, secret, audience=audience, algorithm=algorithm)
 
 
-def _auth_error():
-    raise APIUnauthorized("User authentication is required to access this resource.")
-
-
 def get_jwt_claims(jwt_key='Authorization'):
     logging.info("get_jwt_claims")
     secret = current_app.config.get('JWT_CLIENT_SECRET')
@@ -35,36 +31,40 @@ def get_jwt_claims(jwt_key='Authorization'):
     logging.info("audience: {0}".format(audience))
 
     if not secret:
-        raise APIError("JWT secret not specified. Contact hello@mylestoned.com for assistance.")
+        return None
 
     jwtoken = request.headers.get(jwt_key, request.cookies.get(jwt_key))
     logging.info("Request Headers: ")
     logging.info(request.headers)
     logging.info("jwtoken: {0}".format(jwtoken))
     if not jwtoken:
-        _auth_error()
+        return None
 
     try:
         jwt_claims = decode_jwt(jwtoken, secret, audience=audience)
     except (jwt.ExpiredSignatureError, jwt.DecodeError):
         logging.info("JWT signature error")
-        _auth_error()
+        return None
 
     sub = jwt_claims.get('sub')
     logging.info("Sub: {0}".format(sub))
     if not sub:
-        _auth_error()
+        return None
 
     return jwt_claims
 
 
-def user_required(orig_func=None, jwt_key='Authorization'):
+def user_required(orig_func=None, jwt_key='Authorization', redirect_url=None, code=302):
 
     def requirement(orig_func):
         '''Requirement decorator.'''
         @wraps(orig_func)
         def replacement(*pargs, **kargs):
-            get_jwt_claims(jwt_key=jwt_key)
+            jwt_claims = get_jwt_claims(jwt_key=jwt_key)
+            if not jwt_claims and redirect_url:
+                return redirect(redirect_url, code=code)
+            else:
+                raise APIUnauthorized("User authentication is required to access this resource.")
             return orig_func(*pargs, **kargs)
 
         return replacement
