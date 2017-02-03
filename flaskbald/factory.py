@@ -154,12 +154,21 @@ def create_app(config_file, blueprints=[], custom_error_endpoints=False,
                custom_before_handler_args=[], custom_before_handler_kargs={},
                custom_after_handler=None, custom_after_handler_args=[],
                custom_after_handler_kargs={}, template_folder=None,
-               cors=True, ssl_only=True, db_enabled=True):
+               cors=True, ssl_only=True, db_enabled=True, static_url_path=None,
+               static_folder=None):
 
     if config_file is None:
         raise(Exception("Hey, 'config_files' cannot be 'None'!"))
 
-    app = Flask(__name__) if not template_folder else Flask(__name__, template_folder=template_folder)
+    flask_init_options = {}
+    if template_folder:
+        flask_init_options['template_folder'] = template_folder
+    if static_url_path:
+        flask_init_options['static_url_path'] = static_url_path
+    if static_folder:
+        flask_init_options['static_folder'] = static_folder
+
+    app = Flask(__name__, **flask_init_options)
     app = load_config(app, config_file)
 
     if ssl_only is True and app.config.get("DEBUG") is False:
