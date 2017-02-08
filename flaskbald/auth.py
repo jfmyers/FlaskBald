@@ -64,7 +64,7 @@ def user_required(orig_func=None, jwt_key='Authorization', redirect_url=None, co
             if not jwt_claims:
                 if redirect_url:
                     if type(redirect_url) != str:
-                        redirect_url = redirect_url(request)
+                        return redirect(redirect_url(request), code=code)
                     return redirect(redirect_url, code=code)
                 else:
                     raise APIUnauthorized("User authentication is required to access this resource.")
