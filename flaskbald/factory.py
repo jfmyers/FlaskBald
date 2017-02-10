@@ -98,6 +98,9 @@ def after_handler(app, custom_handler, custom_handler_args, custom_handler_kargs
     if custom_handler:
         @app.after_request
         def after_request(response):
+            response.headers.add('Access-Control-Allow-Origin', '*')
+            response.headers.add('Access-Control-Allow-Headers', '*')
+            response.headers.add('Access-Control-Allow-Methods', '*')
             custom_handler_kargs['response'] = response
             return custom_handler(*custom_handler_args, **custom_handler_kargs)
 
