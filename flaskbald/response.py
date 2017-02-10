@@ -28,7 +28,7 @@ def action(orig_func):
                 'STAGING': current_app.config.get("STAGING"),
                 'MIXPANEL_TOKEN': current_app.config.get("MIXPANEL_TOKEN"),
                 "GA_TOKEN": current_app.config.get("GA_TOKEN"),
-                "HOST_URL": request.host_url
+                "HOST_URL": request.host
             })
             return render_template(template, **data)
         else:
