@@ -19,8 +19,8 @@ def create_jwt(secret, payload={}, exp=date.utcnow() + timedelta(days=7),
 
 def decode_jwt(token, secret, audience=None, algorithm='HS256'):
     if not audience:
-        jwt.decode(token, secret, algorithm=algorithm)
-    return jwt.decode(token, secret, audience=audience, algorithm=algorithm)
+        jwt.decode(token, secret, algorithm=algorithm, leeway=7200)
+    return jwt.decode(token, secret, audience=audience, algorithm=algorithm, leeway=7200)
 
 
 def get_jwt_claims(jwt_key='Authorization'):
