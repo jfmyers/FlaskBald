@@ -24,18 +24,13 @@ def decode_jwt(token, secret, audience=None, algorithm='HS256'):
 
 
 def get_jwt_claims(jwt_key='Authorization'):
-    logging.info("get_jwt_claims")
     secret = current_app.config.get('JWT_CLIENT_SECRET')
-    logging.info("secret: {0}".format(secret))
     audience = current_app.config.get('JWT_CLIENT_AUDIENCE')
-    logging.info("audience: {0}".format(audience))
 
     if not secret:
         return None
 
     jwtoken = request.headers.get(jwt_key, request.cookies.get(jwt_key))
-    logging.info("Request Headers: ")
-    logging.info(request.headers)
     logging.info("jwtoken: {0}".format(jwtoken))
     if not jwtoken:
         return None
@@ -47,7 +42,6 @@ def get_jwt_claims(jwt_key='Authorization'):
         return None
 
     sub = jwt_claims.get('sub')
-    logging.info("Sub: {0}".format(sub))
     if not sub:
         return None
 
@@ -83,6 +77,9 @@ def get_auth_id(jwt_key='Authorization'):
     try:
         jwt_claims = get_jwt_claims(jwt_key=jwt_key)
     except (APIError, APIUnauthorized):
+        return None
+
+    if not jwt_claims:
         return None
 
     return jwt_claims.get('sub')
