@@ -22,12 +22,8 @@ def action(orig_func):
                 data = dict()
 
             data.update({
+                'config': current_app.config,
                 'ENV': current_app.config.get("ENV"),
-                'PROD': current_app.config.get("PROD"),
-                'DEV': current_app.config.get("DEV"),
-                'STAGING': current_app.config.get("STAGING"),
-                'MIXPANEL_TOKEN': current_app.config.get("MIXPANEL_TOKEN"),
-                "GA_TOKEN": current_app.config.get("GA_TOKEN"),
                 "HOST_URL": request.host
             })
             return render_template(template, **data)
