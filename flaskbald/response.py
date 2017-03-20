@@ -33,6 +33,44 @@ def action(orig_func):
     return replacement
 
 
+def action_v2(orig_func):
+    '''
+    Return rendered template with environment data and template functions and optionally set cookies.
+    '''
+    @wraps(orig_func)
+    def replacement(*args, **kargs):
+        handler_response = orig_func(*args, **kargs)
+        if type(handler_response) is tuple or type(handler_response) is list:
+            current_app.jinja_env.globals.update(**template_functions)
+            template = handler_response[0]
+            data = handler_response[1]
+            if not data or type(data) is not dict:
+                data = dict()
+
+            try:
+                cookies = handler_response[2]
+            except:
+                cookies = None
+
+            data.update({
+                'config': current_app.config,
+                'ENV': current_app.config.get("ENV"),
+                "HOST_URL": request.host
+            })
+
+            if cookies and type(cookies) == dict:
+                resp = current_app.make_response(render_template(template, **data))
+                for cookie_key, cookie_value in cookies.iteritems():
+                    resp.set_cookie(cookie_key, value=cookie_value)
+                return resp
+            else:
+                return render_template(template, **data)
+        else:
+            return handler_response
+
+    return replacement
+
+
 def json_response(body, status, status_code=200, jwt_cookie=None):
     '''
     Return response JSON encoded with proper headers.
