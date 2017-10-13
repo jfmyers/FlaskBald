@@ -1,3 +1,3 @@
 FlaskBald
 ==========
-FlaskBald takes inspiration from the PyBald framwork, providing additional "batteries" included type features to the Flask framework.
+FlaskBald takes inspiration from the PyBald framwork, providing "batteries" to the Flask framework.

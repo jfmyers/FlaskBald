@@ -1,10 +1,11 @@
-#!/usr/bin/env python
 # encoding: utf-8
+import json
+
 from flask import request, Response, current_app, render_template
 from webob import Response
 from functools import wraps
-import json
-from template import template_functions
+
+from .template import template_functions
 
 
 def action(orig_func):
@@ -156,7 +157,7 @@ def request_data():
 
 
 class APIException(Exception):
-    '''Base exception class for all Mylestoned API exceptions'''
+    '''Base exception class for all API exceptions'''
     def __init__(self, message):
         self.message = message or self.message
         super(APIException, self).__init__(self.message)

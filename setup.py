@@ -22,7 +22,7 @@ from setuptools import setup
 
 setup(name='flaskbald',
     version='1.0.0',
-    description='Simple batteries included esque features.',
+    description='Simple batteries included features for Flask.',
     long_description=README + '\n\n' + CHANGES,
     url='http://github.com/jfmyers01',
     author='Jim Myers',
